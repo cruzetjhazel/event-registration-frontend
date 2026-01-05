@@ -1,18 +1,11 @@
+import axios from "axios"
 import { useMemo, useState } from "react"
-import api, { setAuthToken } from "../api/api"
 import { useTheme } from "../context/ThemeContext"
 
 const roleRedirects = {
-  attendee: "/dashboard/user",
   user: "/dashboard/user",
   organizer: "/dashboard/organizer",
   admin: "/dashboard/admin",
-}
-
-// Map backend roles to frontend roles for consistency
-const mapRole = (backendRole) => {
-  if (backendRole === "attendee") return "user"
-  return backendRole
 }
 
 export const Login = () => {
@@ -38,43 +31,13 @@ export const Login = () => {
 
     setLoading(true)
     try {
-      const { data } = await api.post(`/login`, { email, password })
+      const { data } = await axios.post(`${apiBase}/api/login`, { email, password })
+      const role = data?.user?.role ?? data?.role
+      const redirectTo = roleRedirects[role]
 
-      const token = data?.token || data?.access_token
-      if (!token) {
-        setError("Login succeeded but no token was returned.")
+      if (!redirectTo) {
+        setError("Login succeeded but no role was provided.")
         return
-      }
-
-      // Persist token for subsequent calls
-      setAuthToken(token)
-
-      // Try to get role from login payload first
-      let role = data?.user?.role ?? data?.role
-
-      // If missing, fetch profile to infer role
-      if (!role) {
-        try {
-          const profileRes = await api.get(`/profile`)
-          role = profileRes?.data?.role ?? profileRes?.data?.user?.role
-        } catch (profileErr) {
-          console.error("Profile fetch failed", profileErr)
-        }
-      }
-
-      // Map backend role to frontend role (e.g., "attendee" → "user")
-      const mappedRole = mapRole(role)
-
-      // Store mapped role in localStorage for route protection
-      if (mappedRole) {
-        localStorage.setItem("user_role", mappedRole)
-      }
-
-      const redirectTo = roleRedirects[role] ?? "/dashboard/user"
-
-      if (!role) {
-        // Let the user know, but still continue to a safe default
-        setError("Logged in without a role; redirected to user dashboard.")
       }
 
       window.location.href = redirectTo
@@ -87,11 +50,11 @@ export const Login = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-white dark:bg-slate-950">
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 rounded-full bg-white dark:bg-slate-800 p-3 shadow-lg transition hover:scale-110 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100"
+        className="fixed top-4 right-4 z-50 rounded-full bg-white dark:bg-slate-800 p-3 shadow-lg transition hover:scale-110 border border-slate-200 dark:border-slate-700"
         aria-label="Toggle theme"
       >
         {theme === "dark" ? (
@@ -107,7 +70,7 @@ export const Login = () => {
 
       {/* Left Side - Background */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-900 to-indigo-700 dark:from-slate-900 dark:via-indigo-900 dark:to-indigo-800">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-indigo-600 dark:from-purple-600 dark:via-fuchsia-600 dark:to-indigo-700">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
         </div>
         
@@ -159,11 +122,11 @@ export const Login = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-50 dark:bg-slate-900/90 p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-8">
         <div className="w-full max-w-md">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h1>
-            <p className="text-slate-700 dark:text-slate-300">Log in to manage your event experience</p>
+            <p className="text-slate-600 dark:text-slate-400">Log in to manage your event experience</p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -178,7 +141,7 @@ export const Login = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 placeholder="you@example.com"
               />
             </div>
@@ -194,13 +157,13 @@ export const Login = () => {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-200">
+              <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                 {error}
               </div>
             )}
@@ -215,14 +178,10 @@ export const Login = () => {
 
             <div className="text-center text-sm text-slate-600 dark:text-slate-400">
               Don't have an account?{" "}
-              <a href="/register" className="font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200">
+              <a href="/register" className="font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">
                 Sign up
               </a>
             </div>
-
-            <a href="/" className="block w-full text-center rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-800">
-              Back to Home
-            </a>
           </form>
         </div>
       </div>

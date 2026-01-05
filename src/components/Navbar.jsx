@@ -2,6 +2,8 @@ import { Link, NavLink } from "react-router-dom"
 
 const links = [
 	{ name: "Events", to: "/events" },
+	{ name: "Calendar", to: "/calendar" },
+	{ name: "Pages", to: "/pages" },
 	{ name: "About", to: "/about" },
 	{ name: "Contact", to: "/contact" },
 ]
@@ -9,7 +11,7 @@ const links = [
 export const Navbar = ({ isAuthenticated = false }) => {
 	return (
 		<header className="sticky top-0 z-30 w-full border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
-			<div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+			<div className="flex w-full items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
 				<Link to="/events" className="group flex items-center gap-3">
 					<span
 						className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500 via-fuchsia-500 to-indigo-500 shadow-lg shadow-purple-500/30 transition duration-300 group-hover:rotate-3 group-hover:scale-110"
@@ -39,19 +41,20 @@ export const Navbar = ({ isAuthenticated = false }) => {
 				</nav>
 
 				<div className="flex items-center gap-3 text-sm font-semibold text-white">
-					{!isAuthenticated ? (
+					{!isAuthenticated && (
 						<Link
 							to="/login"
 							className="rounded-full border border-white/20 px-4 py-2 transition duration-300 hover:border-white hover:bg-white/10 hover:shadow-lg hover:shadow-purple-500/20"
 						>
 							Login
 						</Link>
-					) : (
+					)}
+					{isAuthenticated && (
 						<Link
 							to="/dashboard"
 							className="rounded-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-indigo-500 px-4 py-2 shadow-lg shadow-purple-500/30 transition duration-300 hover:brightness-110"
 						>
-							Dashboard
+							My Dashboard
 						</Link>
 					)}
 				</div>
